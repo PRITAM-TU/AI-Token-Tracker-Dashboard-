@@ -8,7 +8,7 @@ import Layout from './components/Layout'
 import './index.css'
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth()
+  const { user, backendStatus } = useAuth()
   return user ? children : <Navigate to="/login" />
 }
 

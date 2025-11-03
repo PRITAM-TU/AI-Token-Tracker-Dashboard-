@@ -1,9 +1,9 @@
 import React from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { LogOut, User, Brain } from 'lucide-react'
+import { LogOut, User, Brain, Server } from 'lucide-react'
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth()
+  const { user, logout, backendStatus } = useAuth()
 
   return (
     <div className="min-h-screen">
@@ -15,9 +15,17 @@ export default function Layout({ children }) {
               <div className="p-2 bg-blue-500 rounded-lg">
                 <Brain className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">
-                AI Token Tracker
-              </span>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">
+                  AI Token Tracker
+                </span>
+                <div className="flex items-center space-x-2 text-xs text-gray-400">
+                  <Server className={`h-3 w-3 ${
+                    backendStatus === 'connected' ? 'text-green-400' : 'text-red-400'
+                  }`} />
+                  <span>Backend: {backendStatus}</span>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">

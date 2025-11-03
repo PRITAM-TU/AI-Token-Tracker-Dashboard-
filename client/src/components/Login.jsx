@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Brain, Eye, EyeOff, LogIn } from 'lucide-react'
+import { Brain, Eye, EyeOff, LogIn, Server, AlertCircle } from 'lucide-react'
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -12,7 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { login } = useAuth()
+  const { login, backendStatus } = useAuth()
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -24,6 +24,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (backendStatus === 'disconnected') {
+      setError('Backend server is currently unavailable. Please try again later.')
+      return
+    }
+
     setLoading(true)
     setError('')
     
@@ -31,7 +37,7 @@ export default function Login() {
       await login(formData.email, formData.password)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed')
+      setError(err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -58,12 +64,44 @@ export default function Login() {
             Welcome Back
           </h1>
           <p className="text-gray-400 mt-2">Sign in to your AI Token Tracker</p>
+          
+          {/* Backend Status */}
+          <div className={`mt-4 p-3 rounded-xl ${
+            backendStatus === 'connected' ? 'bg-green-500/20 border border-green-500/50' : 'bg-red-500/20 border border-red-500/50'
+          }`}>
+            <div className="flex items-center justify-center space-x-2">
+              <Server className={`h-4 w-4 ${
+                backendStatus === 'connected' ? 'text-green-400' : 'text-red-400'
+              }`} />
+              <span className={`text-sm ${
+                backendStatus === 'connected' ? 'text-green-300' : 'text-red-300'
+              }`}>
+                Backend: {backendStatus === 'connected' ? 'Connected' : 'Disconnected'}
+              </span>
+            </div>
+            <p className="text-xs mt-1 text-gray-400">
+              Server: ai-backend-for-token.onrender.com
+            </p>
+          </div>
         </div>
 
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300 text-sm">
-            {error}
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Backend Disconnected Warning */}
+        {backendStatus === 'disconnected' && (
+          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-300 text-sm">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>Backend server is currently unavailable. Some features may not work.</span>
+            </div>
           </div>
         )}
 
@@ -79,7 +117,8 @@ export default function Login() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400"
+              disabled={backendStatus === 'disconnected'}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 disabled:opacity-50"
               placeholder="Enter your email"
             />
           </div>
@@ -95,13 +134,15 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 pr-12"
+                disabled={backendStatus === 'disconnected'}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-white placeholder-gray-400 pr-12 disabled:opacity-50"
                 placeholder="Enter your password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                disabled={backendStatus === 'disconnected'}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors disabled:opacity-50"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -110,7 +151,7 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || backendStatus === 'disconnected'}
             className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 rounded-xl font-semibold text-white transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none flex items-center justify-center space-x-2"
           >
             <LogIn className="h-5 w-5" />
